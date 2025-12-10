@@ -1,0 +1,5 @@
+shm_rw
+shm_rw_fixed_addr
+packer
+__pycache__/
+out/

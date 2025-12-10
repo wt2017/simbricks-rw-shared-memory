@@ -1,0 +1,24 @@
+ARG REGISTRY=
+ARG TAG=:latest
+FROM ${REGISTRY}simbricks/simbricks-local${TAG}
+
+# build qemu image
+COPY packer /simbricks/images
+COPY install-shm-rw.sh /simbricks/images/scripts
+
+WORKDIR /simbricks/images
+RUN mkdir input-shm-rw
+COPY shm_rw input-shm-rw
+COPY shm_rw_fixed_addr input-shm-rw
+COPY guestinit.sh input-shm-rw
+
+RUN ./packer-wrap.sh base shm-rw extended-image.pkr.hcl false
+#RUN qemu-img convert -f qcow2 -O raw /simbricks/images/output-shm-rw/shm-rw /simbricks/images/output-shm-rw/shm-rw.raw
+
+# simbricks patches (1) add useful logs (2) support single simulator case
+COPY simbricks-patches/host.py /usr/local/lib/python3.10/dist-packages/simbricks/orchestration/simulation/host.py
+COPY simbricks-patches/dependency_graph.py /usr/local/lib/python3.10/dist-packages/simbricks/orchestration/instantiation/dependency_graph.py
+COPY simbricks-patches/simulation_executor.py /usr/local/lib/python3.10/dist-packages/simbricks/runtime/simulation_executor.py
+COPY simbricks-patches/disk_images.py /usr/local/lib/python3.10/dist-packages/simbricks/orchestration/system/disk_images.py
+COPY simbricks-patches/base.py /usr/local/lib/python3.10/dist-packages/simbricks/orchestration/instantiation/base.py
+COPY simbricks-patches/__main__.py /usr/local/lib/python3.10/dist-packages/simbricks/local/__main__.py
